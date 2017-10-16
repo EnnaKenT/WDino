@@ -3,6 +3,7 @@ package com.vlad.wdino.activity;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 
@@ -21,24 +22,16 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.vlad.wdino.R;
+import com.vlad.wdino.api.model.playload.LoginPlayload;
+import com.vlad.wdino.api.model.response.login.LoginResponse;
+import com.vlad.wdino.background.DefaultBackgroundCallback;
+import com.vlad.wdino.manager.RetrofitManager;
+import com.vlad.wdino.view.dialog.RegisterUserError;
 
 /**
  * A login screen that offers login via email/password.
  */
 public class LoginActivity extends AppCompatActivity {
-
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
-    };
-    /**
-     * Keep track of the login task to ensure we can cancel it if requested.
-     */
-    private UserLoginTask mAuthTask = null;
-
     // UI references.
     private AutoCompleteTextView mLoginView;
     private EditText mPasswordView;
@@ -95,10 +88,6 @@ public class LoginActivity extends AppCompatActivity {
      * errors are presented and no actual login attempt is made.
      */
     private void attemptLogin() {
-        if (mAuthTask != null) {
-            return;
-        }
-
         // Reset errors.
         mLoginView.setError(null);
         mPasswordView.setError(null);
@@ -132,13 +121,43 @@ public class LoginActivity extends AppCompatActivity {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(login, password);
-            mAuthTask.execute((Void) null);
+            loginUser(login, password);
         }
     }
 
     private boolean isPasswordValid(String password) {
         return password.length() >= 4;
+    }
+
+    private void loginUser(String login, String password) {
+        LoginPlayload loginPlayload = new LoginPlayload();
+        loginPlayload.setUsername(login);
+        loginPlayload.setPassword(password);
+        RetrofitManager.getInstance().loginUser(loginPlayload, new DefaultBackgroundCallback<LoginResponse>() {
+            @Override
+            public void doOnSuccess(LoginResponse result) {
+                showProgress(false);
+
+                if (result != null) {
+                    if (result.getError() == null) {
+                        //start new activity
+                    } else {
+                        showCustomDialog(getString(R.string.wrong_username_or_password));
+                    }
+                } else {
+                    showCustomDialog(getString(R.string.no_internet_connection));
+                }
+            }
+        });
+    }
+
+    private void showCustomDialog(String string) {
+        new RegisterUserError(LoginActivity.this, string, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+            }
+        })
+                .showDialog();
     }
 
     /**
@@ -174,63 +193,6 @@ public class LoginActivity extends AppCompatActivity {
             // and hide the relevant UI components.
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
             mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
-    }
-
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
-
-        private final String mEmail;
-        private final String mPassword;
-
-        UserLoginTask(String email, String password) {
-            mEmail = email;
-            mPassword = password;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
-
-            try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
-            }
-
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }
-
-            // TODO: register the new account here.
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            mAuthTask = null;
-            showProgress(false);
-
-            if (success) {
-                finish();
-            } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            mAuthTask = null;
-            showProgress(false);
         }
     }
 }

@@ -48,18 +48,6 @@ import retrofit2.Response;
  */
 public class RegisterActivity extends AppCompatActivity {
 
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
-    };
-    /**
-     * Keep track of the login task to ensure we can cancel it if requested.
-     */
-    private UserLoginTask mAuthTask = null;
-
     // UI references.
     private AutoCompleteTextView mEmailView;
     private AutoCompleteTextView mLoginView;
@@ -106,10 +94,6 @@ public class RegisterActivity extends AppCompatActivity {
      * errors are presented and no actual login attempt is made.
      */
     private void attemptLogin() {
-        if (mAuthTask != null) {
-            return;
-        }
-
         // Reset errors.
         mEmailView.setError(null);
         mPasswordView.setError(null);
@@ -176,42 +160,49 @@ public class RegisterActivity extends AppCompatActivity {
                 if (result != null) {
                     if (result.getFormErrors() == null) {
                         showProgress(true);
-                        LoginPlayload loginPlayload = new LoginPlayload();
-                        loginPlayload.setUsername(login);
-                        loginPlayload.setPassword(password);
-                        RetrofitManager.getInstance().loginUser(loginPlayload, new DefaultBackgroundCallback<LoginResponse>() {
-                            @Override
-                            public void doOnSuccess(LoginResponse result) {
-
-                            }
-                        });
+                        loginUser(login, password);
                     } else {
                         FormErrors formError = result.getFormErrors();
                         String error = formError.getMail();
                         error += formError.getName();
-                        new RegisterUserError(RegisterActivity.this, error, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                            }
-                        })
-                                .showDialog();
+                        showCustomDialog(error);
                     }
                 } else {
-                    new RegisterUserError(RegisterActivity.this, getString(R.string.no_internet_connection), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                        }
-                    })
-                            .showDialog();
+                    showCustomDialog(getString(R.string.no_internet_connection));
                 }
             }
         });
+    }
 
+    private void loginUser(String login, String password) {
+        LoginPlayload loginPlayload = new LoginPlayload();
+        loginPlayload.setUsername(login);
+        loginPlayload.setPassword(password);
+        RetrofitManager.getInstance().loginUser(loginPlayload, new DefaultBackgroundCallback<LoginResponse>() {
+            @Override
+            public void doOnSuccess(LoginResponse result) {
+                showProgress(false);
 
-        mAuthTask = new UserLoginTask(registerUserPlayload);
-        if (InternetUtil.isInternetTurnOn(this)) {
-            mAuthTask.execute((Void) null);
-        }
+                if (result != null) {
+                    if (result.getError() == null) {
+                        //start new activity
+                    } else {
+                        showCustomDialog(getString(R.string.wrong_username_or_password));
+                    }
+                } else {
+                    showCustomDialog(getString(R.string.no_internet_connection));
+                }
+            }
+        });
+    }
+
+    private void showCustomDialog(String string) {
+        new RegisterUserError(RegisterActivity.this, string, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+            }
+        })
+                .showDialog();
     }
 
     private boolean isEmailValid(String email) {
@@ -255,48 +246,6 @@ public class RegisterActivity extends AppCompatActivity {
             // and hide the relevant UI components.
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
             mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
-    }
-
-
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
-
-        private final RegisterUserPlayload registerUserPlayload;
-
-        UserLoginTask(RegisterUserPlayload registerUserPlayload) {
-            this.registerUserPlayload = registerUserPlayload;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-
-
-
-            // TODO: register the new account here.
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            mAuthTask = null;
-            showProgress(false);
-
-            if (success) {
-                finish();
-            } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            mAuthTask = null;
-            showProgress(false);
         }
     }
 }

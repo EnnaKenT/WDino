@@ -72,20 +72,29 @@ public class RetrofitManager {
                 BackgroundManager.getInstance().doBackgroundTask(new IBackgroundTask<LoginResponse>() {
                     @Override
                     public LoginResponse execute() {
+                        LoginResponse loginResponse;
                         if (response.isSuccessful()) {
+                            loginResponse = response.body();
                             Log.i(Constants.LOG_TAG, "login response is success");
                         } else {
                             Log.i(Constants.LOG_TAG, "login response not success, cause code: " + Integer.toString(response.code()));
-                            String s = response.raw().toString();
+                            loginResponse = new LoginResponse();
+                            loginResponse.setError(response.raw().toString());
                         }
-                        return response.body();
+                        return loginResponse;
                     }
                 }, callback);
             }
 
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
-
+                Log.e(Constants.LOG_TAG, "login response error: " + t.toString());
+                BackgroundManager.getInstance().doBackgroundTask(new IBackgroundTask<LoginResponse>() {
+                    @Override
+                    public LoginResponse execute() {
+                        return null;
+                    }
+                }, callback);
             }
         });
     }

@@ -3,7 +3,7 @@ package com.vlad.wdino.api.model.response.login;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class LoginResponse {
+public class LoginResponse extends Error{
 
     @SerializedName("sessid")
     @Expose
