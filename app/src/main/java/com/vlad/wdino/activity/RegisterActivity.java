@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 
 import android.os.AsyncTask;
@@ -97,6 +98,7 @@ public class RegisterActivity extends AppCompatActivity {
         // Reset errors.
         mEmailView.setError(null);
         mPasswordView.setError(null);
+        mLoginView.setError(null);
 
         // Store values at the time of the login attempt.
         String email = mEmailView.getText().toString();
@@ -140,9 +142,13 @@ public class RegisterActivity extends AppCompatActivity {
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            showProgress(true);
 
-            registerNewUser(login, email, password);
+            if (InternetUtil.isInternetTurnOn(this)) {
+                showProgress(true);
+                registerNewUser(login, email, password);
+            } else {
+                showCustomDialog(getString(R.string.no_internet_connection));
+            }
         }
     }
 
@@ -162,6 +168,9 @@ public class RegisterActivity extends AppCompatActivity {
                         showProgress(true);
                         loginUser(login, password);
                     } else {
+                        clearInputFields();
+
+                        // name/email already taken or wrong requested data
                         FormErrors formError = result.getFormErrors();
                         String error = formError.getMail();
                         error += formError.getName();
@@ -174,18 +183,25 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
-    private void loginUser(String login, String password) {
+    private void clearInputFields() {
+        mLoginView.setText("");
+        mEmailView.setText("");
+        mPasswordView.setText("");
+        mLoginView.requestFocus();
+    }
+
+    private void loginUser(final String login, String password) {
         LoginPlayload loginPlayload = new LoginPlayload();
         loginPlayload.setUsername(login);
         loginPlayload.setPassword(password);
-        RetrofitManager.getInstance().loginUser(loginPlayload, new DefaultBackgroundCallback<LoginResponse>() {
+        RetrofitManager.getInstance().loginUser(this, loginPlayload, new DefaultBackgroundCallback<LoginResponse>() {
             @Override
             public void doOnSuccess(LoginResponse result) {
                 showProgress(false);
 
                 if (result != null) {
                     if (result.getError() == null) {
-                        //start new activity
+                        startDinosActivity();
                     } else {
                         showCustomDialog(getString(R.string.wrong_username_or_password));
                     }
@@ -194,6 +210,12 @@ public class RegisterActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void startDinosActivity() {
+        Intent intent = new Intent(this, DinosViewActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
     }
 
     private void showCustomDialog(String string) {

@@ -4,10 +4,12 @@ import com.vlad.wdino.api.model.playload.LoginPlayload;
 import com.vlad.wdino.api.model.playload.RegisterUserPlayload;
 import com.vlad.wdino.api.model.response.login.LoginResponse;
 import com.vlad.wdino.api.model.response.RegisterUserResponse;
+import com.vlad.wdino.model.Dinos;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
 
@@ -21,4 +23,7 @@ public interface DinoTestAPI {
 
     @POST("rest/user/logout")
     Call<ResponseBody> logout (@Header("X-CSRF-Token") String xCSRFToken, @Header("Cookie") String credentials);
+
+    @GET("rest/dinos")
+    Call<Dinos> getDinos ();
 }

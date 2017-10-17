@@ -11,8 +11,9 @@ public class RegisterUserError extends CustomDialogBase {
     private String message;
 
     public RegisterUserError(Context context, String error, DialogInterface.OnClickListener confirmCallback) {
-        super(context, confirmCallback);
+        super();
         message = error;
+        makeDialog(context,confirmCallback);
     }
 
     @Override

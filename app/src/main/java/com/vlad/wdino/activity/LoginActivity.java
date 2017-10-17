@@ -26,6 +26,7 @@ import com.vlad.wdino.api.model.playload.LoginPlayload;
 import com.vlad.wdino.api.model.response.login.LoginResponse;
 import com.vlad.wdino.background.DefaultBackgroundCallback;
 import com.vlad.wdino.manager.RetrofitManager;
+import com.vlad.wdino.utils.InternetUtil;
 import com.vlad.wdino.view.dialog.RegisterUserError;
 
 /**
@@ -120,8 +121,13 @@ public class LoginActivity extends AppCompatActivity {
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            showProgress(true);
-            loginUser(login, password);
+
+            if (InternetUtil.isInternetTurnOn(this)) {
+                showProgress(true);
+                loginUser(login, password);
+            } else {
+                showCustomDialog(getString(R.string.no_internet_connection));
+            }
         }
     }
 
@@ -133,15 +139,16 @@ public class LoginActivity extends AppCompatActivity {
         LoginPlayload loginPlayload = new LoginPlayload();
         loginPlayload.setUsername(login);
         loginPlayload.setPassword(password);
-        RetrofitManager.getInstance().loginUser(loginPlayload, new DefaultBackgroundCallback<LoginResponse>() {
+        RetrofitManager.getInstance().loginUser(this, loginPlayload, new DefaultBackgroundCallback<LoginResponse>() {
             @Override
             public void doOnSuccess(LoginResponse result) {
                 showProgress(false);
 
                 if (result != null) {
                     if (result.getError() == null) {
-                        //start new activity
+                        startDinosActivity();
                     } else {
+                        clearInputFields();
                         showCustomDialog(getString(R.string.wrong_username_or_password));
                     }
                 } else {
@@ -149,6 +156,18 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void startDinosActivity() {
+        Intent intent = new Intent(this, DinosViewActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+    }
+
+    private void clearInputFields() {
+        mLoginView.setText("");
+        mPasswordView.setText("");
+        mLoginView.requestFocus();
     }
 
     private void showCustomDialog(String string) {

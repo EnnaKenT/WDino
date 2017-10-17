@@ -12,9 +12,9 @@
     <application
         android:name=".WDinoApp"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/cartoon"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/cartoon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
@@ -28,7 +28,12 @@
         </activity>
         <activity
             android:name=".activity.RegisterActivity"
-            android:label="@string/action_register"></activity>
+            android:label="@string/action_register">
+        </activity>
+        <activity
+            android:name=".activity.DinosViewActivity"
+            android:label="Dinos">
+        </activity>
     </application>
 
 </manifest>
