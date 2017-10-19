@@ -3,7 +3,7 @@ package com.vlad.wdino.model;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class DinoImage extends DownloadedDinoImage{
+public class DinoImage {
 
     @SerializedName("src")
     @Expose

@@ -2,6 +2,7 @@ package com.vlad.wdino.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.google.gson.Gson;
 
@@ -13,6 +14,9 @@ public class SharedPreferenceHelper {
     private final static String PREF_FILE = "PREF";
 
     public static final String KEY_LOGIN_USER = "SavedLogin";
+    public static final String KEY_FID = "SavedFID";
+    public static final String KEY_NID = "SavedNID";
+    public static final String KEY_DINO_LIST = "SavedDinoList";
 
     /**
      * Set a string shared preference
@@ -110,7 +114,7 @@ public class SharedPreferenceHelper {
      * @param key - Key to look up in shared preferences.
      * @param classType - Restored class type.
      */
-    public static <GenericClass> GenericClass getBoolean(Context context, String key, Class<GenericClass> classType) {
+    public static <GenericClass> GenericClass getObject(Context context, String key, Class<GenericClass> classType) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_FILE, 0);
         if (sharedPreferences.contains(key)) {
             final Gson gson = new Gson();

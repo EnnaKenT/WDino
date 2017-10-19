@@ -1,19 +1,15 @@
 package com.vlad.wdino.view.dialog;
 
-
 import android.content.Context;
 import android.content.DialogInterface;
 
 import com.vlad.wdino.R;
 
-public class RegisterUserError extends CustomDialogBase {
+public class LogoutConfirmDialog extends CustomDialogBase {
 
-    private String message;
-
-    public RegisterUserError(Context context, String error, DialogInterface.OnClickListener confirmCallback) {
+    public LogoutConfirmDialog(Context context, DialogInterface.OnClickListener confirmCallback, DialogInterface.OnClickListener cancelCallback) {
         super();
-        message = error;
-        makeDialog(context,confirmCallback);
+        makeDialog(context,confirmCallback, cancelCallback);
     }
 
     @Override
@@ -23,27 +19,27 @@ public class RegisterUserError extends CustomDialogBase {
 
     @Override
     protected int getConfirmMessage() {
-        return R.string.ok;
+        return R.string.yes;
     }
 
     @Override
     protected int getCancelMessage() {
-        return -1;
+        return R.string.cancel;
     }
 
     @Override
     protected int getMessage() {
-        return -1;
+        return R.string.logout_message;
     }
 
     @Override
     protected String getCustomMessage() {
-        return message;
+        return null;
     }
 
     @Override
     protected int getIconResId() {
-        return android.R.drawable.ic_dialog_alert;
+        return R.drawable.ic_question_answer_white_48dp;
     }
 
 }

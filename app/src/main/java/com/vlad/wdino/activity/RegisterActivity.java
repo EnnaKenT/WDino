@@ -86,6 +86,15 @@ public class RegisterActivity extends AppCompatActivity {
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+        restoreFieldValues(savedInstanceState);
+    }
+
+    private void restoreFieldValues(Bundle savedInstanceState) {
+        if (savedInstanceState != null && savedInstanceState.containsKey(Constants.LOGIN_FIELD)) {
+            mLoginView.setText(savedInstanceState.getString(Constants.LOGIN_FIELD));
+            mEmailView.setText(savedInstanceState.getString(Constants.EMAIL_FIELD));
+            mPasswordView.setText(savedInstanceState.getString(Constants.PASS_FIELD));
+        }
     }
 
 
@@ -168,8 +177,6 @@ public class RegisterActivity extends AppCompatActivity {
                         showProgress(true);
                         loginUser(login, password);
                     } else {
-                        clearInputFields();
-
                         // name/email already taken or wrong requested data
                         FormErrors formError = result.getFormErrors();
                         String error = formError.getMail();
@@ -183,18 +190,20 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
-    private void clearInputFields() {
-        mLoginView.setText("");
-        mEmailView.setText("");
-        mPasswordView.setText("");
-        mLoginView.requestFocus();
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putString(Constants.EMAIL_FIELD, String.valueOf(mEmailView.getText()));
+        outState.putString(Constants.LOGIN_FIELD, String.valueOf(mLoginView.getText()));
+        outState.putString(Constants.PASS_FIELD, String.valueOf(mPasswordView.getText()));
     }
 
     private void loginUser(final String login, String password) {
         LoginPlayload loginPlayload = new LoginPlayload();
         loginPlayload.setUsername(login);
         loginPlayload.setPassword(password);
-        RetrofitManager.getInstance().loginUser(this, loginPlayload, new DefaultBackgroundCallback<LoginResponse>() {
+        RetrofitManager.getInstance().loginUser(loginPlayload, new DefaultBackgroundCallback<LoginResponse>() {
             @Override
             public void doOnSuccess(LoginResponse result) {
                 showProgress(false);
@@ -243,32 +252,25 @@ public class RegisterActivity extends AppCompatActivity {
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+        int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mLoginFormView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
+        mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+        mLoginFormView.animate().setDuration(shortAnimTime).alpha(
+                show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+            }
+        });
 
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
+        mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+        mProgressView.animate().setDuration(shortAnimTime).alpha(
+                show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            }
+        });
     }
 }
 

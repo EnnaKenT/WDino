@@ -1,35 +1,38 @@
 package com.vlad.wdino.activity;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
+import com.scwang.smartrefresh.layout.api.RefreshLayout;
+import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 import com.vlad.wdino.R;
 import com.vlad.wdino.adapter.RecyclerAdapter;
-import com.vlad.wdino.background.BackgroundManager;
+import com.vlad.wdino.api.model.response.login.LoginResponse;
 import com.vlad.wdino.background.DefaultBackgroundCallback;
-import com.vlad.wdino.background.IBackgroundTask;
 import com.vlad.wdino.manager.RetrofitManager;
 import com.vlad.wdino.model.Dino;
 import com.vlad.wdino.utils.Constants;
+import com.vlad.wdino.utils.InternetUtil;
+import com.vlad.wdino.utils.SharedPreferenceHelper;
+import com.vlad.wdino.view.dialog.LogoutConfirmDialog;
 
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
-
-import me.dkzwm.widget.srl.SmoothRefreshLayout;
 
 public class DinosViewActivity extends AppCompatActivity {
     private ImageButton mAddNewDino;
     private RecyclerView mRecyclerView;
-    private SmoothRefreshLayout tapRefresh;
+    private RefreshLayout refreshLayout;
     private List<Dino> dinoList;
 
     @Override
@@ -38,16 +41,104 @@ public class DinosViewActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dinos_view);
 
         initWidgets();
-        getDataSet();
+        initRefreshLayout();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.logout:
+                showLogoutDialog();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void showLogoutDialog() {
+        LogoutConfirmDialog dialog = new LogoutConfirmDialog(this, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                logout();
+            }
+        }, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+            }
+        });
+        dialog.showDialog();
+
+    }
+
+    private void logout() {
+        LoginResponse user = SharedPreferenceHelper.getObject(this, SharedPreferenceHelper.KEY_LOGIN_USER, LoginResponse.class);
+
+        RetrofitManager.getInstance().logout(user, new DefaultBackgroundCallback<String>() {
+            @Override
+            public void doOnSuccess(String result) {
+                if (result.contains("true")) {
+                    Toast.makeText(DinosViewActivity.this, "Successfully logout", Toast.LENGTH_SHORT).show();
+                    startLoginActivity();
+                }
+            }
+        });
+    }
+
+    private void startLoginActivity() {
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
     }
 
     private void initWidgets() {
         mAddNewDino = (ImageButton) findViewById(R.id.add_new_dino_button);
+        mAddNewDino.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startAddActivity();
+            }
+        });
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        tapRefresh = (SmoothRefreshLayout) findViewById(R.id.smoothRefreshLayout);
+        refreshLayout = (RefreshLayout) findViewById(R.id.refreshLayout);
+
+        dinoList = (List<Dino>) getLastCustomNonConfigurationInstance();
+        if (dinoList != null) {
+            initRecyclerView(dinoList);
+        } else {
+            getDataSet();
+        }
+    }
+
+    private void startAddActivity() {
+        Intent intent = new Intent(this, AddDinoActivity.class);
+        startActivity(intent);
+    }
+
+    private void initRefreshLayout() {
+        refreshLayout.setOnRefreshListener(new OnRefreshListener() {
+            @Override
+            public void onRefresh(RefreshLayout refreshlayout) {
+                refreshlayout.finishRefresh(2000);
+                if (InternetUtil.isInternetTurnOn(DinosViewActivity.this)) {
+                    getDataSet();
+                } else {
+                    Toast.makeText(DinosViewActivity.this, getString(R.string.no_internet_connection), Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
     }
 
     private void getDataSet() {
+        Log.i(Constants.LOG_TAG, "1");
         RetrofitManager.getInstance().getDinos(new DefaultBackgroundCallback<List<Dino>>() {
             @Override
             public void doOnSuccess(List<Dino> result) {
@@ -59,48 +150,23 @@ public class DinosViewActivity extends AppCompatActivity {
                     dinoList = result;
                     initRecyclerView(result);
                 }
-                loadDinoImages();
             }
         });
     }
 
-    private void loadDinoImages() {
-        if (!dinoList.isEmpty()) {
-            for (final Dino dino : dinoList) {
-                final String url = dino.getDino().getDinoImage().getSrc();
-                BackgroundManager.getInstance().doBackgroundTask(new IBackgroundTask<Bitmap>() {
-                    @Override
-                    public Bitmap execute() {
-                        try {
-                            URL urlConnection = new URL(url);
-                            HttpURLConnection connection = (HttpURLConnection) urlConnection
-                                    .openConnection();
-                            connection.setDoInput(true);
-                            connection.connect();
-                            InputStream input = connection.getInputStream();
-                            Bitmap myBitmap = BitmapFactory.decodeStream(input);
-                            return myBitmap;
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        return null;
-                    }
-                }, new DefaultBackgroundCallback<Bitmap>() {
-                    @Override
-                    public void doOnSuccess(Bitmap result) {
-                        dino.getDino().getDinoImage().setImage(result);
-                        refreshRecyclerView();
-                    }
-                });
-            }
-        }
+    @Override
+    public Object onRetainCustomNonConfigurationInstance() {
+        return dinoList;
     }
 
     private void initRecyclerView(List<Dino> dinoList) {
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mRecyclerView.getContext(),
+                new LinearLayoutManager(this).getOrientation());
         RecyclerAdapter rvAdapter = new RecyclerAdapter(dinoList);
+
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        mRecyclerView.addItemDecoration(dividerItemDecoration);
         mRecyclerView.setAdapter(rvAdapter);
         mRecyclerView.setHasFixedSize(true);
     }

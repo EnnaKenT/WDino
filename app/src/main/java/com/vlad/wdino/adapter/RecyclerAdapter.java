@@ -1,25 +1,24 @@
 package com.vlad.wdino.adapter;
 
-import android.graphics.Bitmap;
-import android.net.Uri;
+import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
 import com.vlad.wdino.R;
+import com.vlad.wdino.WDinoApp;
 import com.vlad.wdino.model.Dino;
 import com.vlad.wdino.model.DinoImage;
-import com.vlad.wdino.model.Dino_;
 import com.vlad.wdino.utils.Constants;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -39,14 +38,14 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         return new ViewHolder(v);
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView mNameTextView;
-        public TextView mColorTextView;
-        public TextView mBirthTextView;
-        public TextView mAboutTextView;
-        public ImageView mDinoImage;
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView mNameTextView;
+        TextView mColorTextView;
+        TextView mBirthTextView;
+        TextView mAboutTextView;
+        ImageView mDinoImage;
 
-        public ViewHolder(View v) {
+        ViewHolder(View v) {
             super(v);
             mNameTextView = v.findViewById(R.id.dino_name);
             mColorTextView = v.findViewById(R.id.dino_color);
@@ -60,7 +59,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
     public void onBindViewHolder(ViewHolder holder, int position) {
         holder.mNameTextView.setText(mDataset.get(position).getDino().getDinoTitle());
 
-
         String date = mDataset.get(position).getDino().getDinoBirthdate();
         SimpleDateFormat fromUser = new SimpleDateFormat("dd.MM.yyyy", Locale.US);
         SimpleDateFormat myFormat = new SimpleDateFormat("dd MMMM yyyy", Locale.US);
@@ -70,17 +68,22 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        String birthDate = Constants.DINO_BIRTH_DATE + reformattedStr;
+        String birthDate = Constants.DINO_BIRTH_DATE + "<i>" + reformattedStr + "</i>";
         holder.mBirthTextView.setText(Html.fromHtml(birthDate));
 
-        String color = Constants.DINO_COLOR + mDataset.get(position).getDino().getDinoColor();
+        String color = Constants.DINO_COLOR + "<i>" + mDataset.get(position).getDino().getDinoColor() + "</i>";
         holder.mColorTextView.setText(Html.fromHtml(color));
 
-        holder.mAboutTextView.setText(mDataset.get(position).getDino().getDinoAbout());
+        String about = mDataset.get(position).getDino().getDinoAbout();
+        holder.mAboutTextView.setText(about);
 
-        Bitmap dinoImage = mDataset.get(position).getDino().getDinoImage().getImage();
-        holder.mDinoImage.setImageBitmap(dinoImage);
+        final String url = mDataset.get(position).getDino().getDinoImage().getSrc();
+        Picasso.with(WDinoApp.getCurrentActivity().getApplicationContext())
+                .load(url)
+                .error(R.drawable.internet_not_found_img)
+                .into(holder.mDinoImage);
     }
+
 
     @Override
     public int getItemCount() {

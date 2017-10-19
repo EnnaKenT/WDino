@@ -1,12 +1,19 @@
 package com.vlad.wdino.view.dialog;
 
+import android.content.Context;
+import android.content.DialogInterface;
+
 import com.vlad.wdino.R;
 
 public class NoInternetAccessError extends CustomDialogBase {
+
+    public NoInternetAccessError(Context context) {
+        super();
+        makeDialog(context);
+    }
     @Override
     protected int getTitle() {
-        return R.string.confirm_title;
-
+        return R.string.notify;
     }
 
     @Override
@@ -20,7 +27,12 @@ public class NoInternetAccessError extends CustomDialogBase {
     }
 
     @Override
-    protected String getMessage() {
+    protected int getMessage() {
+        return R.string.confirm_title;
+    }
+
+    @Override
+    protected String getCustomMessage() {
         return null;
     }
 

@@ -26,6 +26,7 @@ import com.vlad.wdino.api.model.playload.LoginPlayload;
 import com.vlad.wdino.api.model.response.login.LoginResponse;
 import com.vlad.wdino.background.DefaultBackgroundCallback;
 import com.vlad.wdino.manager.RetrofitManager;
+import com.vlad.wdino.utils.Constants;
 import com.vlad.wdino.utils.InternetUtil;
 import com.vlad.wdino.view.dialog.RegisterUserError;
 
@@ -76,6 +77,14 @@ public class LoginActivity extends AppCompatActivity {
 
         mLoginFormView = findViewById(R.id.login_form_scroll);
         mProgressView = findViewById(R.id.login_progress);
+        restoreFieldValues(savedInstanceState);
+    }
+
+    private void restoreFieldValues(Bundle savedInstanceState) {
+        if (savedInstanceState != null && savedInstanceState.containsKey(Constants.LOGIN_FIELD)) {
+            mLoginView.setText(savedInstanceState.getString(Constants.LOGIN_FIELD));
+            mPasswordView.setText(savedInstanceState.getString(Constants.PASS_FIELD));
+        }
     }
 
     private void startRegisterActivity() {
@@ -135,11 +144,11 @@ public class LoginActivity extends AppCompatActivity {
         return password.length() >= 4;
     }
 
-    private void loginUser(String login, String password) {
+    private void loginUser(String login, final String password) {
         LoginPlayload loginPlayload = new LoginPlayload();
         loginPlayload.setUsername(login);
         loginPlayload.setPassword(password);
-        RetrofitManager.getInstance().loginUser(this, loginPlayload, new DefaultBackgroundCallback<LoginResponse>() {
+        RetrofitManager.getInstance().loginUser(loginPlayload, new DefaultBackgroundCallback<LoginResponse>() {
             @Override
             public void doOnSuccess(LoginResponse result) {
                 showProgress(false);
@@ -148,7 +157,6 @@ public class LoginActivity extends AppCompatActivity {
                     if (result.getError() == null) {
                         startDinosActivity();
                     } else {
-                        clearInputFields();
                         showCustomDialog(getString(R.string.wrong_username_or_password));
                     }
                 } else {
@@ -164,16 +172,13 @@ public class LoginActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void clearInputFields() {
-        mLoginView.setText("");
-        mPasswordView.setText("");
-        mLoginView.requestFocus();
-    }
-
-    private void showCustomDialog(String string) {
+    private void showCustomDialog(final String string) {
         new RegisterUserError(LoginActivity.this, string, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
+                if (string.equals(getString(R.string.wrong_username_or_password))) {
+                    mPasswordView.requestFocus();
+                }
             }
         })
                 .showDialog();
@@ -187,32 +192,33 @@ public class LoginActivity extends AppCompatActivity {
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+        int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mLoginFormView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
+        mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+        mLoginFormView.animate().setDuration(shortAnimTime).alpha(
+                show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+            }
+        });
 
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
+        mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+        mProgressView.animate().setDuration(shortAnimTime).alpha(
+                show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            }
+        });
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putString(Constants.LOGIN_FIELD, String.valueOf(mLoginView.getText()));
+        outState.putString(Constants.PASS_FIELD, String.valueOf(mPasswordView.getText()));
     }
 }
 

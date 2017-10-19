@@ -3,9 +3,6 @@
     package="com.vlad.wdino">
 
     <!-- To auto-complete the email text field in the login form with the user's emails -->
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission android:name="android.permission.READ_PROFILE" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -33,6 +30,9 @@
         <activity
             android:name=".activity.DinosViewActivity"
             android:label="Dinos">
+        </activity>
+        <activity android:name=".activity.AddDinoActivity"
+            android:theme="@style/NoBar">
         </activity>
     </application>
 

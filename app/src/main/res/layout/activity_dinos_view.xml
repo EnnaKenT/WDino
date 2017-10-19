@@ -11,22 +11,22 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:src="@drawable/ic_add_black_36dp"
-        />
+        android:src="@drawable/ic_add_black_36dp" />
 
-    <me.dkzwm.widget.srl.SmoothRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/smoothRefreshLayout"
+    <com.scwang.smartrefresh.layout.SmartRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/refreshLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/add_new_dino_button"
-        android:layout_alignParentTop="true"
-        android:padding="16dp">
+        android:layout_alignParentTop="true">
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
             android:scrollbars="vertical" />
-    </me.dkzwm.widget.srl.SmoothRefreshLayout>
+    </com.scwang.smartrefresh.layout.SmartRefreshLayout>
 
 </RelativeLayout>
